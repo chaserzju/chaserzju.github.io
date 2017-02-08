@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+
+    
+  <url>
+    <loc>http://doughnut.pub/2017/02/07/bigdata-landscape/</loc>
+    <lastmod>2017-02-08T01:42:42.000Z</lastmod>
+    <data>
+        <display>
+        <title>大数据生态</title>
+        <pubTime>2017-02-07T09:48:13.000Z</pubTime>
+        
+        <tag>big data</tag>
+         
+         
+           
+             
+              <breadCrumb title="技术" url="http://doughnut.pub/categories/%E6%8A%80%E6%9C%AF/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://doughnut.pub/2017/02/06/memory-cache/</loc>
+    <lastmod>2017-02-07T03:07:26.000Z</lastmod>
+    <data>
+        <display>
+        <title>What.Every.Programmer.Should.Know.About.Memory笔记</title>
+        <pubTime>2017-02-06T09:11:28.000Z</pubTime>
+        
+        <tag>内存</tag>
+         
+        <tag>性能</tag>
+         
+         
+           
+             
+              <breadCrumb title="技术" url="http://doughnut.pub/categories/%E6%8A%80%E6%9C%AF/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+</urlset>
