@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Doughnut</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://doughnut.pub/"/>
+  <updated>2017-02-08T01:42:42.000Z</updated>
+  <id>http://doughnut.pub/</id>
+  
+  <author>
+    <name>Hui Cao</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>大数据生态</title>
+    <link href="http://doughnut.pub/2017/02/07/bigdata-landscape/"/>
+    <id>http://doughnut.pub/2017/02/07/bigdata-landscape/</id>
+    <published>2017-02-07T09:48:13.000Z</published>
+    <updated>2017-02-08T01:42:42.000Z</updated>
+    
+    <content type="html"><![CDATA[<img title="大数据生态图" alt="大数据" class="class1 class2" src="http://okzzyqap7.bkt.clouddn.com/images/Big-Data-Landscape.png">]]></content>
+    
+    <summary type="html">
+    
+      &lt;img title=&quot;大数据生态图&quot; alt=&quot;大数据&quot; class=&quot;class1 class2&quot; src=&quot;http://okzzyqap7.bkt.clouddn.com/images/Big-Data-Landscape.png&quot;&gt;
+    
+    </summary>
+    
+      <category term="技术" scheme="http://doughnut.pub/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="big data" scheme="http://doughnut.pub/tags/big-data/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>What.Every.Programmer.Should.Know.About.Memory笔记</title>
+    <link href="http://doughnut.pub/2017/02/06/memory-cache/"/>
+    <id>http://doughnut.pub/2017/02/06/memory-cache/</id>
+    <published>2017-02-06T09:11:28.000Z</published>
+    <updated>2017-02-07T03:07:26.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>由于文章篇幅较长，全文114页，前面部分章节内容更偏向内核或者操作系统开发所需知识，直接跳过从最核心的第六章开始，“what programmers can do”，程序员如何在针对内存特性进行程序优化</p>
+<ol>
+<li><p><strong>短路缓存</strong></p>
+<p> 当程序对内存的访问是流式或者说one-pass形式的，数据一次访问后续再次使用可能性不大时，可以使用处理器提供的non-temporal memory write指令，形如_mm_stream_si128，这样处理器直接将数据写回到内存中，而不是先读取cache-line再修改。但是该优化手段适用性太窄，可以用于数据初始化。</p>
+</li>
+<li><p><strong>缓存优化</strong></p>
+<p> 非并发程序性能的优化在不考虑IO情况下，主体就是内存使用性能优化，而内存的性能优化最大一点就是对处理器和内存之间的cache进行性能优化，或者说如何降低cache miss或者提升内存使用局部性。</p>
+<ul>
+<li><p><strong>L1数据缓存优化</strong></p>
+<ol>
+<li>内存访问保持顺序性，充分利用预取优势。当前处理器还是有点笨，当内存访问按照地址线性访问时，处理器能够很好的做prefetch，但是还没办法做到学习数据访问模式，按照模式对内存进行预取</li>
+<li>充分使用cache-line。处理器的每一层级cache都是由一个个cahce-line组成，这也是访问、修改、预取的操作单元。将程序需要一次操作的数据放在尽可能少的cache-line中，或者将程序每次循环操作的基本单元与cache-line同步，能够大幅提升cache使用率和效率，降低cache miss。不同体系架构CPU的cache-line大小不一，linux可以使用命令”getconf LEVEL1_DCACHE_LINESIZE”获得</li>
+<li>数据结构优化。常见数据结构如一个较大的struct需要仔细规划每个成员的位置和顺序，主要有三个原则：<ul>
+<li>根据关键词(critical word load)原理，最常引用的成员应当放置于结构体的起始处。</li>
+<li>仔细对待结构体内各个成员的内存地址对齐问题，尽量保持常用成员放置在同一个cache-line中。借用工具pahole。</li>
+<li>结构体中需要经常一起访问的成员也应当在定义中聚集在一起</li>
+</ul>
+</li>
+<li>内存分配优化。首先需要保证结构内存的起始地址能够对齐cache-line，否则仅仅在数据结构内部优化内存对齐和组织并不够。<ul>
+<li>动态内存申请。利用额外接口进行内存申请，posix_memalign</li>
+<li>编译器动态分配。struct strtype variable __attribute((aligned(64)));</li>
+<li>改变结构定义。 struct strtype {…members…} __attribute((aligned(64)))</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p><strong>L1指令缓存优化</strong></p>
+<p>  多数针对指令缓存的优化，开发者在自身代码里能够做的不多，更多的都是循环展开、使用inline等方式，还有更多的手段是借用编译器选项进行辅助调优</p>
+<ol>
+<li>减少指令跳转。常见的循环展开和使用inline，编译器选项（gcc的-O2 and -O3）也能够自动优化，如将部分小的函数inline</li>
+<li>降低代码段大小。更小的代码段显然能够更好的驻留缓存，可以使用gcc的-Os选项。另一方面，这条优化手段也与使用inline冲突，这两个优化措施需要根据实际情况综合衡量。</li>
+<li>代码线性执行。代码线性执行显然能够最大化利用缓存预取特性以及cpu流水线，但是随处可见的if等条件判断所产生的跳转会产生代码执行的空洞。开发时可以借助编译器选项手动指定条件判断的倾向性，编译器能够尽可能生成连续代码。在代码利用__builtin_expect来指定条件判断的倾向值，最后gcc的freorder-blocks选项帮助重构代码块顺序。最后，在实际编码过程中也可以注意代码排放顺序。</li>
+<li>代码地址对齐。基本就是编译器行为，开发者借助编译器选项来实现。<ul>
+<li>函数对齐，-falign-functions=N</li>
+<li>跳转代码块对齐，-falign-jumps=N</li>
+<li>循环代码块对齐，-falign-loops=N</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p><strong>L2及以上缓存优化</strong></p>
+<p>  基本优化手段与L1类似，高级别缓存与L1的不同主要有两点，一是L1缓存的cache miss还有可能在L2或者L3缓存中命中，但是L2/L3中的cache miss就一定会导致内存读取，代价较高；而是是L2/L3缓存是多核共享，可使用的空间需要实时评估。</p>
+<p>  总结起来，L2/L3缓存的优化手段有限，主要提到的手段就是实时计算代码能够使用的缓存大小，结合程序逻辑，最大化缓存利用率，貌似有点玄学。</p>
+</li>
+<li><p><strong>TLB优化</strong></p>
+<p>  两个很显而易见又很难做到的手段</p>
+<ol>
+<li>减少内存使用。这里的减少内存使用并不是内存的绝对量，而是映射到物理内存页的页数，大幅降低缺页数，TLB Miss也能相应降低</li>
+<li>减少TLB Entry使用量。这一条相当难做到，需要申请的内存地址尽可能连续和聚集。但是虚拟内存的申请和映射由操作系统完成，开发者能做的文中提到了一种方式，利用mmap的MAP_FIXED选项来直接映射固定其实地址的内存，这个在现实用户态程序开发中基本可不考虑。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><p><strong>预取</strong></p>
+<ul>
+<li><p><strong>硬件预取</strong></p>
+<p>  处理器能够根据最近的几次cache miss模式来决定是否预取线性连续地址的内存到cache中，但是这个模式并不由开发者或者程序控制。同时处理器的预取有两个缺点，一是这种预取显然不能跨内存页，由于虚拟地址特性，处理器显然无法预测跨页地址的实际对应内存page；二是处理器能够决定预取的模式有限，主要是根据连续的cache miss来判断</p>
+</li>
+<li><p><strong>软件预取</strong></p>
+<p>  利用_mm_prefetch指令，程序内部能够控制缓存预取的时间和方式，并能够根据调节参数来指定读取到L1还是L2 CACHE。软件预取给了程序内存预取的zhu’dong’x主动性，但这既是优点也是缺点。使用得当会大幅降低cache miss，使用不当则会污染缓存</p>
+</li>
+<li><p><strong>预测预取</strong></p>
+<p>  有点类似于之前提到的分支预测，感觉在实际开发中作用不大，示例代码如下：</p>
+  <figure class="highlight avrasm"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">ld8.a      <span class="built_in">r6</span> = [<span class="built_in">r8</span>]<span class="comment">;;</span></div><div class="line">[... other instruction ...]</div><div class="line">ld8.c.clr  <span class="built_in">r6</span> = [<span class="built_in">r8</span>]<span class="comment">;;</span></div><div class="line"><span class="keyword">add</span>        <span class="built_in">r5</span> = <span class="built_in">r6</span>, <span class="built_in">r7</span><span class="comment">;;</span></div><div class="line">st8        [<span class="built_in">r18</span>] = <span class="built_in">r5</span></div></pre></td></tr></table></figure>
+<p>  首先”ld8.a”用于预取[r8]内容到r6寄存器中，而”ld8.c.clr”指令则会判断[r8]内容是否改变，如果未改变则预取生效，如果改变则该指令会重新读取[r8]内容到r6寄存器。</p>
+<p>  这种预测预取的优化并不通用，太依赖实际的实现逻辑。</p>
+</li>
+<li><p><strong>辅助线程</strong></p>
+<p>  顾名思义，之前提到的预取动作都是由工作线程自主进行，这样会导致工作线程的代码复杂，同时也难以判断如何确定预取的周期和目标。所以可以借助辅助线程专职帮助内存预取，尤其是在与工作线程同一个核心上的超线程来进行预取更能发挥共用同一L2缓存的优势。</p>
+<p>  感觉在内存预取角度，辅助线程也没有解决代码复杂和判断预取范围的问题，反而是加剧这两个问题。专职的预取线程更多的还是适用于解决硬盘IO上了。</p>
+</li>
+<li><p><strong>DCA优化</strong></p>
+<p>  DCA（Direct Cache Access）的出现的意义在于，由于网卡等硬件设备能够直接利用DMA将接收数据存放于内存之中并通知CPU处理，此时CPU处理这些数据时由于通过中断触发是一定会产生cache miss的。而利用DCA直接写入缓存，则能减少这样的cache miss。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>多线程优化</strong></p>
+<ul>
+<li><p><strong>并发优化</strong> </p>
+<p>  主要问题是程序并发访问数据或数据结构引发的”false sharing”问题。具体来说就是一个线程在修改变量x时，在缓存层看并不仅仅是x的状态变化，而是包含变量x的整个cache-line的状态变为Modified，所以需要将其他处理器中的相应cache-line全部通知失效，这时如果其他线程需要频繁读取同一个cache-line中另外一个只读属性的话，就会引起大量的cache miss。这种同时占用一个cache line，部分更新导致整体cache-line失效引起其它线程cache-miss的现象就是false sharing。解决方案主要有以下几个方式：</p>
+<pre><code>1. 将只读变量与读写变量区分初始化区域或者说内存存放区域
+2. 进一步利用结构体将读写变量或者只读变量进行分组，以期落在同一个cache-line中
+3. 认为增加对齐指令或填充字节将频繁读写变量置于同一个cache-line中
+4. 利用线程私有变量来隔离每个线程频繁更新并独立使用的变量
+</code></pre></li>
+<li><p><strong>原子操作</strong></p>
+<p>  这部分可以牵出另外一个大话题–lock free algorithm。简化来说在当前体系架构中，就是充分利用cas指令来实现多线程多同一个内存的同步和访问。</p>
+</li>
+<li><p><strong>带宽优化</strong></p>
+<p>  在多处理器架构中，有两个带宽可以优化，一个是每个处理器内部所有核共享cache的带宽，一个是每个处理器所有核共享的通过北桥到内存的带宽。这里的带宽优化的主要手段就是线程调度，尽量将处理相近或相同内存数据区域的线程调度在同一个处理器内的核心中，这样一方面能减少北桥带宽争用，另一方面能够最大化处理内部cache的利用率。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>NUMA架构编程</strong></p>
+<p> 由于处理器的快速发展，多处理器共享一个北桥实现内存访问会产生极大的带宽瓶颈和争用，为解决这个问题才产生了numa架构，内存分为多个zone分别直接对接在每个处理器上，这样每个处理器访问直连的内存区域的延时会极低，而访问其它内存区域则需要通过处理器之间的通道间接访问。</p>
+<p> numa架构带来的主要问题是对上层开发者仍不够透明，如linux系统中会对numa优化，所有内存优先在本线程所在处理器的内存区域中分配内存。但这样对于内存占用量较大的程序如数据库会产生极差的影响，数据库所需要的缓存会远远超过一个处理器所分配的内存区域大小，这样就会产生频繁的内存缺页和换入换出。当前业界的主要解决方式还是更改linux对numa内存优化策略，改为Interleaving模式，让内存平均在各个内存区域分配。</p>
+</li>
+</ol>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;由于文章篇幅较长，全文114页，前面部分章节内容更偏向内核或者操作系统开发所需知识，直接跳过从最核心的第六章开始，“what programmers can do”，程序员如何在针对内存特性进行程序优化&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;短路缓存&lt;/stron
+    
+    </summary>
+    
+      <category term="技术" scheme="http://doughnut.pub/categories/%E6%8A%80%E6%9C%AF/"/>
+    
+    
+      <category term="内存" scheme="http://doughnut.pub/tags/%E5%86%85%E5%AD%98/"/>
+    
+      <category term="性能" scheme="http://doughnut.pub/tags/%E6%80%A7%E8%83%BD/"/>
+    
+  </entry>
+  
+</feed>
